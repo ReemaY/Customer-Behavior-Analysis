@@ -1,0 +1,192 @@
+---
+title: "IE6600 Data Visualization - Reema"
+author: "Reema Yadav"
+date: "12/7/2021"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+Title: Analysis of Customer's Behaviour using R
+---
+
+```{r}
+library(dplyr)
+library(magrittr)
+library(tidyr)
+library(ggplot2)
+library(skimr)
+library(DataExplorer)
+library(plotly)
+library(ggplot2)
+library(IRdisplay)
+```
+
+
+```{r}
+#setwd("C:/Users/18572/Documents/Data Visualization/Assignment/HW6")
+#df <- read.csv(file="C:/Users/18572/Documents/Data Visualization/HW6/marketing_campaign.csv")
+main_df <- read.csv(file="marketing_campaign.csv", sep = "\t", header = T)
+```
+
+```{r}
+#plot_intro(main_df,title='Dataset')
+```
+
+```{r}
+head(main_df)
+```
+
+```{r}
+skim(main_df)
+```
+
+```{r}
+plot_bar(main_df,ncol=2) 
+```
+```{r}
+#Filling the missing value with median value
+main_df$Income[is.na(main_df$Income)]=median(main_df$Income,na.rm=T)
+```
+
+
+```{r}
+#Calculating the age for each customer as a vector
+current_date= Sys.Date()
+current_year = format(current_date,format="%Y")
+current_year = as.integer(current_year)
+Age= c(current_year - main_df$Year_Birth)
+Age
+```
+
+```{r}
+#Adding Age column and then calculating maximum age 
+main_df['Age']=Age
+max(main_df$Age)
+```
+```{r}
+#Calculating median age 
+median(main_df$Age)
+```
+
+```{r}
+#Calculating average age
+mean(main_df$Age)
+```
+
+
+```{r}
+#Understanding the income based on Marital_Status
+#ggplot(df) +  
+#  geom_point(aes(x = Income, y = Marital_Status), color = '#FF0000') + labs(x="Income")
+```
+
+
+```{r}
+children = main_df %>% filter(Age < 15) %>% summarize(n())
+young = main_df %>% filter(15 <= Age & Age <= 25) %>% summarize(n())
+middle_aged = main_df %>% filter(25 < Age & Age <= 35) %>% summarize(n())
+above_35 = main_df %>% filter( Age > 36) %>% summarize(n())
+children = as.integer(children)
+young = as.integer(young)
+middle_aged = as.integer(middle_aged)
+above_35 = as.integer(above_35)
+
+count = c(children,young,middle_aged,above_35)
+labels_age = c('Children','Young','Middle Aged','Above 35')
+```
+
+```{r}
+fig1 = plot_ly(labels = ~labels_age, values = ~count, type = 'pie',textposition='inside',
+textinfo = 'label+percent',insidetextfont = list(color = '#FFFFFF'))
+fig1 = fig1 %>% layout(title = 'Age Group Distribution',
+        xaxis = list(showgrid = FALSE), yaxis = list(showgrid = FALSE))
+fig1
+```
+
+
+
+```{r}
+#Unique Education values
+unique(main_df$Education)
+```
+```{r}
+#Creating a table for Education 
+table_ed = sort(table(main_df$Education),decreasing=T)
+per_ed = as.vector(prop.table(table_ed)*100)
+labels_ed = c('Graduation','PhD','Master','2n Cycle','Basic')
+df_ed = data.frame(labels_ed,per_ed)
+df_ed 
+```
+
+```{r}
+fig2 = plot_ly(df_ed, y=~labels_ed,x=~per_ed,type='bar',marker= list(color=c('#001889','#74008D','#E06A5A','#EACA00',"#FF0000")))
+fig2 = fig2 %>% layout(title="Percentage of Edcational Level",xaxis = list(title='Percentage'),
+yaxis = list(title='Education',categoryorder = "array",
+categoryarray = rev(labels_ed)))
+fig2
+```
+
+```{r}
+#How many children's customers have?
+#Unique values in Kidhome
+unique(main_df$Kidhome)
+```
+
+```{r}
+#Unique values in Teenhome
+unique(main_df$Teenhome)
+```
+
+```{r}
+#Merge
+main_df['Children']=main_df['Kidhome']+main_df['Teenhome']
+```
+
+```{r}
+#Creating table function for children column
+table_cd=sort(table(main_df$Children),decreasing=T)
+per_cd = as.vector(prop.table(table_cd)*100)
+labels_cd = c('1','0','2','3')
+df_cd = data.frame(labels_cd,per_cd)
+df_cd
+```
+
+```{r}
+fig3 = plot_ly(df_cd, y=~labels_cd,x=~per_cd,type='bar',orientation='h',
+marker= list(color=c('#001889','#74008D','#E06A5A','#EACA00')))
+fig3 = fig3 %>% layout(title="Percentage of No of Children",xaxis = list(title='Percentage'),
+yaxis = list(title='No of Children',categoryorder = "array",
+categoryarray = rev(labels_cd)))
+fig3
+```
+
+```{r}
+main_df['Expenses'] = main_df['MntWines'] + main_df['MntFruits'] + main_df['MntMeatProducts'] + 
+main_df['MntFishProducts'] + main_df['MntSweetProducts'] + main_df['MntGoldProds']
+fig4 = plot_ly(main_df,x=~Expenses,type='histogram',marker = list(color = '#74008D',
+line = list(color = '#FFFFFF',width = 1)))
+fig4 = fig4 %>% layout(title="Frequency of Customer's Expenses",xaxis=list(title='Expense ($)'),yaxis=list(title='Frequency'),xaxis = list(gridcolor = 'ffff'))
+fig4
+```
+
+```{r}
+#Maximum Income
+max(main_df$Income)
+```
+
+```{r}
+#Average Income
+mean(main_df$Income)
+```
+
+```{r}
+fig5= plot_ly(main_df,x=~Income,type='histogram',marker = list(color = '#EACA00',
+line = list(color = '#FFFFFF',width = 1)))
+fig5 = fig5 %>% layout(title="Frequency of Income",xaxis=list(title='Income'),yaxis=list(title='Frequency'))
+fig5
+```
+
+```{r}
+
+```
+
